@@ -113,7 +113,7 @@ create policy "auth full access" on dashboard_layouts for all using (auth.role()
 -- ── Seed your two business lines ────────────────────────────
 
 insert into projects (name, description) values
-('PQC Consulting', 'Post-Quantum Cryptography consulting business with three partners. Client engagement planning and tracking.');
+('Cryptographic Transformation', 'Cryptographic Transformation Dashboard');
 
 -- ── Storage buckets for Evidence and Artifacts ──────────────
 -- Private buckets — files are only reachable via short-lived signed URLs

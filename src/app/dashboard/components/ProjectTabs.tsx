@@ -3,6 +3,7 @@
 import { useState } from "react";
 import SimpleTable from "./SimpleTable";
 import FileTable from "./FileTable";
+import Overview from "./Overview";
 
 const TABS = [
   "Stakeholders",
@@ -14,26 +15,41 @@ const TABS = [
 ] as const;
 
 type Tab = (typeof TABS)[number];
+type View = "overview" | Tab;
 
 export default function ProjectTabs({ projectId }: { projectId: string }) {
-  const [tab, setTab] = useState<Tab>("Stakeholders");
+  const [view, setView] = useState<View>("overview");
+
+  if (view === "overview") {
+    return <Overview projectId={projectId} onSelect={setView} />;
+  }
+
+  const tab = view;
 
   return (
     <div>
-      <div className="flex gap-1 border-b border-neutral-200 mb-6 overflow-x-auto">
-        {TABS.map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-3 py-2 text-sm whitespace-nowrap border-b-2 -mb-px ${
-              tab === t
-                ? "border-neutral-900 text-neutral-900 font-medium"
-                : "border-transparent text-neutral-500 hover:text-neutral-800"
-            }`}
-          >
-            {t}
-          </button>
-        ))}
+      <div className="flex items-center gap-4 border-b border-neutral-200 mb-6">
+        <button
+          onClick={() => setView("overview")}
+          className="text-sm text-neutral-500 hover:text-neutral-900 pb-2 -mb-px shrink-0"
+        >
+          ← Overview
+        </button>
+        <div className="flex gap-1 overflow-x-auto">
+          {TABS.map((t) => (
+            <button
+              key={t}
+              onClick={() => setView(t)}
+              className={`px-3 py-2 text-sm whitespace-nowrap border-b-2 -mb-px ${
+                tab === t
+                  ? "border-neutral-900 text-neutral-900 font-medium"
+                  : "border-transparent text-neutral-500 hover:text-neutral-800"
+              }`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
       </div>
 
       {tab === "Stakeholders" && (
