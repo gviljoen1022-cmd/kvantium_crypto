@@ -1,8 +1,10 @@
-# PQC Consulting Dashboard
+# PQC Engagement Tracker
 
-A private, login-gated dashboard for the PQC Consulting business line —
-stakeholders, commercials, timeframes, actions, evidence, and stored
-artifacts.
+A private, login-gated CRM-style dashboard for the **PQC Consulting**
+business line — engagements (customers), an append-only activity log,
+region targets, and per-engagement artifacts. It follows the venture's
+Go-To-Market Plan: South Africa and Zambia, 60-day and 90-120-day target
+horizons, and a defined status/source pipeline vocabulary.
 
 This is a **standalone app with its own Supabase project** — it holds only
 PQC Consulting data. It doesn't share a login, database, or file storage
@@ -37,19 +39,12 @@ anywhere in this setup.
 3. **A code editor** (optional but recommended) — https://code.visualstudio.com.
    VS Code has an integrated PowerShell terminal, so you can do everything
    below without leaving it.
-4. **Unzip the project** you downloaded — right-click `business-dashboard.zip`
-   → **Extract All** → pick a folder, e.g. `C:\Users\<you>\business-dashboard`.
-   Then open that `app` folder in VS Code, or `cd` into it in PowerShell:
-   ```powershell
-   cd C:\Users\<you>\business-dashboard\app
-   ```
-   Run every command below from inside this `app` folder.
 
 ## 1. Create your Supabase project
 
 1. Go to https://supabase.com → sign up (free) → **New project**
-2. Pick a name (e.g. `business-dashboard`), a database password (save it
-   somewhere safe), and a region close to you (e.g. `eu-central` or
+2. Pick a name (e.g. `pqc-engagement-tracker`), a database password (save
+   it somewhere safe), and a region close to you (e.g. `eu-central` or
    `af-south-1` if offered)
 3. Wait ~2 minutes for it to provision
 
@@ -58,33 +53,38 @@ anywhere in this setup.
 1. In your Supabase project, open **SQL Editor** → **New query**
 2. Open `supabase/schema.sql` from this project, paste the whole thing in,
    and click **Run**
-3. This creates all the tables, sets row-level security so only signed-in
-   users can read/write, creates the `evidence` and `artifacts` storage
-   buckets, and seeds this project (PQC Consulting)
+3. This creates `regions`, `targets`, `engagements`, `actions` and
+   `artifacts`, sets row-level security (including the lock-on-Landed
+   rules), creates the status-derivation trigger, seeds the `regions` and
+   `targets` rows from the GTM Plan's 12-month numbers, and reuses the
+   existing `artifacts` storage bucket.
+
+   **If you're re-running this on the project that had the old
+   Stakeholders/Commercials/Timeframes app**, this script drops that old
+   schema and the `evidence` storage bucket first — it's a full replace,
+   not an incremental migration. Export anything worth keeping from the
+   old tables before running it.
 
 ## 3. Lock down sign-ups (important — do this before deploying)
 
 By default, anyone who finds your login page could create an account. Since
-this is just for you:
+this is just for you and your partners:
 
 1. In Supabase, go to **Authentication → Sign In / Providers**
-2. Turn off **"Allow new users to sign up"** *after* you've created your own
-   account in step 5 below — or add your email to an allow-list if you'd
-   rather not lose the option
+2. Turn off **"Allow new users to sign up"** *after* everyone who needs an
+   account has created one — or add allowed emails to an allow-list if
+   you'd rather not lose the option
 
 ## 4. Connect the app to your Supabase project
 
 1. In Supabase: **Project Settings → API**
 2. Copy the **Project URL** and the **anon public** key
-3. In PowerShell, from inside the `app` folder, make a copy of the example
-   env file:
+3. In PowerShell, from inside this folder, make a copy of the example env
+   file:
    ```powershell
    Copy-Item .env.local.example .env.local
    ```
-   (Or in File Explorer: copy `.env.local.example`, paste it, rename the
-   copy to `.env.local`.)
-4. Open `.env.local` in a text editor (Notepad or VS Code) and paste your
-   values in:
+4. Open `.env.local` in a text editor and paste your values in:
    ```
    NEXT_PUBLIC_SUPABASE_URL=https://your-ref.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
@@ -92,7 +92,7 @@ this is just for you:
 
 ## 5. Run it locally and create your account
 
-In PowerShell, from inside the `app` folder:
+In PowerShell, from inside this folder:
 
 ```powershell
 npm install
@@ -102,68 +102,68 @@ npm run dev
 Open http://localhost:3000 → you'll land on the login page → click
 **"Need an account? Create one"** → sign up with your own email and a
 password. Supabase will email you a confirmation link (check spam) — click
-it, then sign in. You should land straight on the **PQC Consulting**
-dashboard. Now go back and do step 3 (turn off public sign-ups).
+it, then sign in. You should land on the **Overview Dashboard**, showing
+your seeded region targets and zero engagements. Now go back and do step 3
+(turn off public sign-ups).
 
-## 6. Deploy for free (Vercel)
+## 6. Deploy (Vercel)
 
-1. Create a new **private** repository on https://github.com (no README/
-   .gitignore needed — this project already has one). Then, in PowerShell
-   from inside the `app` folder:
-   ```powershell
-   git init
-   git add .
-   git commit -m "Initial commit"
-   git branch -M main
-   git remote add origin https://github.com/<your-username>/<your-repo>.git
-   git push -u origin main
-   ```
-2. Go to https://vercel.com → sign up with GitHub → **Add New Project** →
-   import the repo
-3. In the Vercel project's **Settings → Environment Variables**, add the
+This app already deploys to the `kvantium-crypto` Vercel project — push to
+`main` and Vercel picks it up. If you're setting up fresh:
+
+1. In the Vercel project's **Settings → Environment Variables**, add the
    same two variables from your `.env.local`
-4. Deploy — you'll get a free `https://your-app.vercel.app` URL
+2. Deploy — you'll get your `https://kvantium-crypto.vercel.app` URL
 
 ---
 
 ## How the data is organised
 
-This app holds a single business line, but every table still hangs off a
-`project_id` (there's just one `projects` row). That's intentional — it
-keeps this app on the exact same schema as your other business dashboard,
-so you can copy improvements between them without rewriting anything, and
-it leaves room for a sub-project later (e.g. splitting Wines into separate
-import batches) without a schema change.
+- **regions** — South Africa and Zambia, seeded once.
+- **targets** — one row per region × horizon (60-day / 90-120-day):
+  customer count, license count, and revenue target. Read-only seed data
+  from the GTM Plan — the app never writes to this table.
+- **engagements** — the core CRM record, one row per customer, from first
+  contact through Landed. Never re-created between horizons; the 60-Day /
+  90-120-Day / All tabs on a Region Workspace are filters over this same
+  table.
+- **actions** — the append-only activity log (calls, meetings, emails,
+  notes). This is the *only* way an engagement's status changes — the app
+  never edits `engagements.status` directly, it inserts an action with
+  `status_to` set and a database trigger derives the new status.
+- **artifacts** — files (proposals, readiness reviews, signed agreements,
+  meeting notes, other) attached to one engagement each, stored in the
+  private `artifacts` Supabase Storage bucket and only ever accessed
+  through short-lived signed links generated while you're signed in.
+  Artifacts are never deleted — a new version is a new row.
 
-- **stakeholders** — name, role, organization, contact
-- **commercials** — `category` is either `profit_share` or `input_cost`;
-  for input costs, `cost_type` is `deemed`, `actual`, or `budgeted`, and
-  `party` records which partner/entity it applies to
-- **timeframes** — milestones with due dates and status
-- **actions** — action items with an owner, due date, and status
-- **evidence** / **artifacts** — file uploads (presentations, decks, etc.),
-  stored in private Supabase Storage buckets and only ever accessed through
-  short-lived signed links generated while you're signed in
+When an engagement's status is set to **Landed**, it locks: `locked_at` is
+set, and further edits to its header, activity log, and artifacts are
+blocked both in the UI and at the database (RLS) level. A banner explains
+that revenue/delivery tracking continues in the separate invoicing
+forecast, which is intentionally outside this app.
+
+## What's deliberately not in this app (Phase 2)
+
+Per the Build Brief: a Pipeline/deal-tracking module, revenue forecasting,
+and a monthly invoicing schedule all live outside this app. The only
+groundwork laid now is a reserved, unused `pipeline_deal_id` column on
+`engagements` and a disabled "Pipeline Link" tab on the engagement
+drill-down — so adding that module later doesn't require a schema
+migration.
 
 ## Extending it later
 
-This is deliberately a plain, unbranded scaffold so it's easy to keep
-building on:
-
-- **New feature/table**: add a table in Supabase (SQL Editor), then a new
-  tab in `src/app/dashboard/components/ProjectTabs.tsx` using
-  the existing `SimpleTable` or `FileTable` components — most new fields
-  need no new component at all, just a new column entry
-- **Configurable, drag-and-drop dashboard**: the `dashboard_layouts` table
-  is already in the schema for this — it stores a JSON layout per user, per
-  project, ready for a widget system (e.g. `react-grid-layout`) to read
-  from and write to when you're ready to build it
-- **New business line**: this app is deliberately scoped to one business
-  and one Supabase project, so a new business line means duplicating this
-  whole folder (as you did to split Wines and PQC Consulting apart), giving
-  it its own Supabase project, and updating the seed row in
-  `supabase/schema.sql` — that keeps each business's partners walled off
-  from the others' data
+- **New field on Engagement**: add the column in `supabase/schema.sql`
+  (with a `check` constraint if it's an enum), add it to `src/lib/types.ts`,
+  then thread it through `NewEngagementForm.tsx` / `EngagementDrillDown.tsx`
+  as needed.
+- **New status or source value**: update the `check` constraint in
+  `supabase/schema.sql` on both `engagements.status`/`source` and
+  `actions.status_to`, then the matching array in `src/lib/types.ts`
+  (`STATUSES` / `SOURCES`) — both must stay in sync.
+- **Phase 2 (Pipeline)**: see `CLAUDE.md` for what's reserved vs. what
+  still needs building.
 
 ## A note on ownership
 

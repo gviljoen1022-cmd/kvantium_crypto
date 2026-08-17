@@ -17,7 +17,7 @@ export default async function DashboardLayout({
       <header className="border-b border-neutral-200 bg-white">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/dashboard" className="font-semibold text-neutral-900">
-            Business Dashboard
+            PQC Engagement Tracker
           </Link>
           <div className="flex items-center gap-3 text-sm text-neutral-500">
             <span>{user?.email}</span>

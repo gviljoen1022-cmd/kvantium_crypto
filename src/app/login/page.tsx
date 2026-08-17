@@ -48,7 +48,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-neutral-50 px-4">
       <div className="w-full max-w-sm">
         <h1 className="text-xl font-semibold text-neutral-900 mb-1">
-          Business Dashboard
+          PQC Engagement Tracker
         </h1>
         <p className="text-sm text-neutral-500 mb-6">
           {mode === "sign_in" ? "Sign in to continue" : "Create your account"}

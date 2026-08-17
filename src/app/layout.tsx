@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Business Dashboard",
-  description: "Personal dashboard for tracking business lines",
+  title: "PQC Engagement Tracker",
+  description: "CRM-style engagement tracker for the PQC Consulting venture",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
