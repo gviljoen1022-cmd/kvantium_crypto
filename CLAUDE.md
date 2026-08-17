@@ -39,8 +39,18 @@ separate deployments.
 
 - `src/middleware.ts` — gates every route except `/login`. Unchanged from
   before the rebuild. Don't weaken this without being asked explicitly.
-- `src/app/login/page.tsx` — email/password sign-in and sign-up, unchanged
-  auth flow (only the heading text was rebranded).
+- `src/app/login/page.tsx` — email/password sign-in and sign-up.
+  `emailRedirectTo` is set explicitly to `${window.location.origin}/auth/callback`
+  on sign-up so confirmation links work in both local dev and production —
+  this depends on the Supabase project's **Redirect URLs** allow-list also
+  containing both origins.
+- `src/app/auth/callback/route.ts` — completes the Supabase email
+  confirmation (and any other PKCE code-exchange) flow: reads `?code=`,
+  calls `exchangeCodeForSession`, then redirects to `/dashboard` (or
+  `?next=`). This route didn't exist before 2026-08-17 despite
+  `middleware.ts` already whitelisting `/auth/*` as public — confirmation
+  emails sent fine via Brevo but the link had nowhere to land, so
+  verification silently failed.
 - `src/lib/types.ts` — shared TypeScript types and enums (`Status`,
   `Source`, `Horizon`, `ActionType`, `ArtifactType`) mirrored from
   `supabase/schema.sql`'s check constraints. Keep these two in sync.
